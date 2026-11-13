@@ -168,7 +168,6 @@ Substituted IPs: show the documentation address with a shaded tail and a small "
   State in the footer that shading marks the substitution; it is not the control.
 Write XHTML-strict markup (void elements self-closed, no bare & or < in text, script wrapped in CDATA) so a
   strict XML parser can verify it. Define every CSS class you use; use no class you do not define.
-If a local model generates the page, follow step 8.
 ```
 
 ## 7 · QA (do not skip)
@@ -193,34 +192,6 @@ Verify the file; do not assume.
 7. Invented content: list every sentence of the HTML's visible text that does not occur in the markdown.
    Section ledes and labels are expected; anything else is a fabrication and must be regenerated.
 Report failures; fix; re-run until all seven pass.
-```
-
-## 8 · Delegate the HTML to a local model (optional)
-
-```
-Use the local OpenAI-compatible model for all writing; you orchestrate, assemble and verify.
-- Check the loaded model's context first (/v1/models reports context_length). With an 8k context, keep each
-  prompt near 2k tokens and allow up to 4.2k tokens of output; split the markdown by heading into chunks of
-  that size (the cards in three parts, the raw figures in three, the audit table alone with a larger budget).
-- One system prompt for every call: output only HTML or CSS, XHTML-strict syntax, never a bare & or <,
-  every table with a colgroup summing to 100 and data-label on every cell, keep every number and sentence
-  verbatim, render the inferred marker as a class, render IPs with the masked tail.
-- One class contract shared by every call: the only classes allowed, what each means, the section and card
-  ids in order. The stylesheet is generated from the same contract (two calls if the first hits the token
-  limit: drop its incomplete last rule, then ask for the missing classes by name).
-- The shell is its own call and must leave placeholders: /*CSS*/ inside <style>, <!--SECTIONS--> in <main>,
-  and LOGO_LIGHT_URI / LOGO_DARK_URI in the masthead. Never send the logo data to the model; the assembler
-  base64-encodes the SVGs and fills the placeholders.
-- Disable the model's thinking for these calls; it otherwise spends the budget on reasoning and returns
-  nothing. Temperature 0.15.
-- Expect three failure modes and prompt against them explicitly, with the word STRICT: invented text (a
-  retrieval stamp, a substitution note, extra "not yet supported" bullets, a "missing data sources" block),
-  summarised lists (posture items collapsed into prose), and contract drift (column widths changed, a
-  colour variable used as a length). Step 7 checks 6 and 7 catch the first two; fix the third by sending
-  the measured defect back as a patch prompt whose rules are appended after the existing CSS.
-- Two-token slips in model output (a colgroup percentage, a gap value) are cheaper to correct in place than
-  to re-prompt; record every such hand correction in the final report.
-- Keep the prompts, outputs and scripts under .claude/llm so a rerun regenerates only the changed chunks.
 ```
 
 ---
